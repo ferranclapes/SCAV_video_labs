@@ -51,9 +51,11 @@ def run_length_encoding(byte_stream):
     encoded_stream = []
     for i in range(len(byte_stream)):
         count = 1
-        while i + count < len(byte_stream) and byte_stream[i] == byte_stream[i + count]:
+        while i < len(byte_stream) and byte_stream[i] == byte_stream[i + 1]:
             count += 1
+            i += 1 #To move to the next byte till the next byte is different
         encoded_stream.append((byte_stream[i], count))
+        i += 1 #Move to the next different byte
     return encoded_stream
 
 def to_black_white(input_image):
