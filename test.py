@@ -141,6 +141,46 @@ class TestVideoCoding(unittest.TestCase):
         self.assertTrue(np.mean(LL_man) > 0)
         print("[OK] DWT Manual vs Auto structure verified.")
 
+    def test_z_visualize_dwt_output(self):
+        """
+        [VISUAL TEST] Aquest test carrega una imatge real i mostra
+        la descomposició DWT.
+        Nota: El test s'aturarà fins que tanquis la finestra del gràfic.
+        """
+        import cv2
+        import os
+
+        # 1. Seleccionem una imatge que tinguis a la carpeta
+        # Com que veig a la teva captura que tens 'bw_image.jpg', fem servir aquesta
+        image_path = "bw_image.jpg" 
+        
+        # Si no la troba, intentem amb 'image.jpg' convertint-la a gris
+        if not os.path.exists(image_path):
+            image_path = "image.jpg"
+        
+        if not os.path.exists(image_path):
+            print(f"\n[SKIP] No s'ha trobat cap imatge a '{image_path}' per visualitzar.")
+            return
+
+        print(f"\n[VISUAL] Carregant '{image_path}' per a inspecció visual...")
+
+        # 2. Carreguem la imatge en escala de grisos (flag 0)
+        img = cv2.imread(image_path, 0)
+
+        # 3. Fem l'Encode amb la teva classe
+        LL, LH, HL, HH = self.dwt_enc.encode(img)
+
+        # 4. Cridem a la teva funció de visualització
+        # Assumim que l'has posat dins de la classe DWTEncoder com em vas ensenyar
+        print(">>> S'obrirà una finestra amb els sub-bands. Tanca-la per acabar el test.")
+        try:
+            self.dwt_enc.visualize_dwt(LL, LH, HL, HH)
+        except AttributeError:
+            # Per si de cas no has posat la funció dins la classe encara
+            print("Error: No trobo 'visualize_dwt' dins de DWTEncoder.")
+            
+        print("[OK] Visualització completada.")
+
 if __name__ == '__main__':
     print("=== RUNNING VIDEO CODING UNIT TESTS ===")
     unittest.main()

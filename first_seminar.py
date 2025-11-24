@@ -169,11 +169,11 @@ class DWTEncoder:
         L_rec = np.zeros((h * 2, w))
         H_rec = np.zeros((h * 2, w))
         # Apply (A = L + H) in the evens, and (B = L - H) in the odds
-        L_rec[0::2, :] = LL + HL
-        L_rec[1::2, :] = LL - HL
+        L_rec[0::2, :] = LL + LH
+        L_rec[1::2, :] = LL - LH
         
-        H_rec[0::2, :] = LH + HH
-        H_rec[1::2, :] = LH - HH
+        H_rec[0::2, :] = HL + HH
+        H_rec[1::2, :] = HL - HH
 
         #Horizontal reconstruction
         img_rec = np.zeros((h * 2, w * 2))
