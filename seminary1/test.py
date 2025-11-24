@@ -154,11 +154,11 @@ class TestVideoCoding(unittest.TestCase):
 
         # 1. Seleccionem una imatge que tinguis a la carpeta
         # Com que veig a la teva captura que tens 'bw_image.jpg', fem servir aquesta
-        image_path = "bw_image.jpg" 
+        image_path = "seminary1/bw_image.jpg" 
         
         # Si no la troba, intentem amb 'image.jpg' convertint-la a gris
         if not os.path.exists(image_path):
-            image_path = "image.jpg"
+            image_path = "seminary1/image.jpg"
         
         if not os.path.exists(image_path):
             print(f"\n[SKIP] No s'ha trobat cap imatge a '{image_path}' per visualitzar.")
