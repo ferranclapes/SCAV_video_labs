@@ -100,6 +100,7 @@ class DWTEncoder:
 
 
     def encode(self, input):
+        input = input.astype(float)
         high, width = input.shape
         
         #if the dimensions are not even, make them even by a tiny crop as an easy way.
