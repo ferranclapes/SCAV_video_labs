@@ -24,28 +24,34 @@ class traslator:
         stream = ffmpeg.output(stream, output_image)
         ffmpeg.run(stream)
 
-
     def serpentine(self, input_image):
         with Image.open(input_image) as img:
             pixels = np.array(img)
             height, width = pixels.shape[:2]
 
-            output_pixels = np.zeros((height*width,3))
-
-            total_diagonals = height-1 + width-1
-
-            for diag in range(total_diagonals + 1):
-                if diag % 2 == 0:       #if the diagonal is even, go from bottom to top until the end of the diagonal
-                    for x in range(diag + 1):
-                        y = diag - x
-                        if (x < width and y < height) and (x >= 0 and y >= 0):
-                            output_pixels[diag+x] = pixels[y, x] #put the pixel in the correct order in the output array
-                else:                   #if the diagonal is odd, go from top to bottom until the end of the diagonal
-                    for x in range(diag + 1):
-                        y = diag - x
-                        if (x < width and y < height) and (x >= 0 and y >= 0):
-                            output_pixels[diag+x] = pixels[y, x] #put the pixel in the correct order in the output array
-
+            output_pixels = np.zeros((height * width, 3))
+            index = 0
+            
+            for i in range(height + width - 1):
+                if i % 2 == 1:  # Odd diagonals (up-right)
+                    x = 0 if i < height else i - height + 1
+                    y = i if i < height else height - 1
+                    while x < width and y >= 0:
+                        if index < len(output_pixels):
+                            output_pixels[index] = pixels[y, x]
+                            index += 1
+                        x += 1
+                        y -= 1
+                else:  # Even diagonals (down-left)
+                    x = i if i < width else width - 1
+                    y = 0 if i < width else i - width + 1
+                    while x >= 0 and y < height:
+                        if index < len(output_pixels):
+                            output_pixels[index] = pixels[y, x]
+                            index += 1
+                        x -= 1
+                        y += 1
+            
             return output_pixels
         
 
@@ -90,14 +96,12 @@ class DCTEncoder:
     def decode(self, input):
         return idct(idct(input.T, norm='ortho').T, norm='ortho') 
 
-
 class DWTEncoder:
 
     def lowpassfilter(self, input_1, input_2):
         return (input_1 + input_2) / 2
     def highpassfilter(self, input_1, input_2):
         return (input_1 - input_2) / 2
-
 
     def encode(self, input):
         input = input.astype(float)
