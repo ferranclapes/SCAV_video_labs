@@ -1,0 +1,3 @@
+Link al repositori. Hi ha una carpeta per a cada semi/práctica:
+
+https://github.com/ferranclapes/SCAV_video_labs.git
