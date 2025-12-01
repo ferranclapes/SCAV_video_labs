@@ -1,2 +1,13 @@
+#API dependecies:
 fastapi
 uvicorn[standard]
+python-multipart
+
+#FFMPEG implementation in python:
+ffmpeg-python
+
+#S1 dependencies:
+numpy
+Pillow
+scipy
+matplotlib
