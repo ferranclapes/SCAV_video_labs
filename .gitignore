@@ -1,0 +1,30 @@
+# --- Video Files ---
+# Ignorar formats de vídeo comuns per evitar pujar-los per error
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.flv
+*.wmv
+*.webm
+*.yuv
+*.rgb
+
+# --- Python ---
+# Ignorar carpetes de compilació i caché (que ja veig a la teva foto)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Entorns Virtuals (si en fas servir en el futur) ---
+env/
+venv/
+.env
+
+# --- IDEs i Sistema Operatiu ---
+# Ignorar configuracions locals de l'editor (veig que uses VS Code)
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
