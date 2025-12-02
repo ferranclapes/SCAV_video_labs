@@ -55,14 +55,13 @@ def serpentine(input_image):
         return output_pixels
         
 
-def to_black_white(input_image):
-    stream = ffmpeg.input(input_image)
+def to_black_white(input_image_path, output_image_path):
+    stream = ffmpeg.input(input_image_path)
     stream = ffmpeg.filter(stream, 'format', 'gray')
-    output_image = 'bw_' + input_image
-    stream = ffmpeg.output(stream, output_image)
+    stream = ffmpeg.output(stream, output_image_path)
     ffmpeg.run(stream)
-    return stream
-    
+    return output_image_path
+
 def run_length_encoding(byte_stream):
     encoded_stream = []
     i = 0 
