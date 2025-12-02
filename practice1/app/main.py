@@ -28,6 +28,14 @@ async def resize_image_endpoint(
     height: int = Form(-1),
     file: UploadFile = File(...)
 ):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+
     TEMP_DIR.mkdir(exist_ok = True)
     input_path = TEMP_DIR / file.filename
     output_filename = f"resized_{width}x{height}_{file.filename}"
@@ -59,6 +67,13 @@ async def resize_image_endpoint(
 async def bw_image_endpoint(
     file: UploadFile = File(...)
 ):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
     TEMP_DIR.mkdir(exist_ok = True)
     input_path = TEMP_DIR / file.filename
     output_filename = f"bw_{file.filename}"
