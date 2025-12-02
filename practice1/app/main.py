@@ -22,6 +22,32 @@ def read_root():
 
 
 # --- ENDPOINTS FOR S1 FUNCTIONS ---
+@app.post("/translate/rgb_to_yuv/")
+async def rgb_to_yuv_endpoint(
+    r: int = Form(0),
+    g: int = Form(0),
+    b: int = Form(0)
+):
+    try:
+        translator = s1.traslator()
+        y, u, v = translator.rgb_to_yuv(r, g, b)
+        return {"y": y, "u": u, "v": v}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during RGB to YUV conversion: {str(e)}")
+
+@app.post("/translate/yuv_to_rgb/")
+async def yuv_to_rgb_endpoint(
+    y: float = Form(0.0),
+    u: float = Form(0.0),
+    v: float = Form(0.0)
+):
+    try:
+        translator = s1.traslator()
+        r, g, b = translator.yuv_to_rgb(y, u, v)
+        return {"r": r, "g": g, "b": b}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during YUV to RGB conversion: {str(e)}")
+
 @app.post("/process/resize_image/")
 async def resize_image_endpoint(
     width: int = Form(-1),
@@ -63,6 +89,31 @@ async def resize_image_endpoint(
         # if output_path.exists():
         #     os.remove(output_path)
 
+@app.post("/process/serpentine/")
+async def serpentine_endpoint(
+    file: UploadFile = File(...)
+):
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
+
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process image with s1_functions:
+        output_pixels = s1.serpentine(str(input_path))
+
+        #3 Return processed data:
+        return {"serpentine_pixels": output_pixels.tolist()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during serpentine reading: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+
 @app.post("/process/bw_image/")
 async def bw_image_endpoint(
     file: UploadFile = File(...)
@@ -100,3 +151,20 @@ async def bw_image_endpoint(
             os.remove(input_path)
         #if output_path.exists():
             #os.remove(output_path)
+
+@app.post("/process/run_length_encoding/")
+async def run_length_encoding_endpoint(
+    file: UploadFile = File(...)
+):
+    try:
+        #1 Read uploaded file content as bytes
+        file_content = await file.read()
+        byte_stream = list(file_content)
+
+        #2 Process byte stream with s1_functions:
+        encoded_stream = s1.run_length_encoding(byte_stream)
+
+        #3 Return encoded data:
+        return {"run_length_encoded": encoded_stream}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during Run Length Encoding: {str(e)}")
