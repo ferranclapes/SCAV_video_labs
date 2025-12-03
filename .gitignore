@@ -23,7 +23,7 @@ venv/
 .env
 
 # --- IDEs i Sistema Operatiu ---
-# Ignorar configuracions locals de l'editor (veig que uses VS Code)
+# Ignorar configuracions locals de l'editor
 .vscode/
 .idea/
 .DS_Store

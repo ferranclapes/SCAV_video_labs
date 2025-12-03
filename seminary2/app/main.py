@@ -7,6 +7,7 @@ from pathlib import Path
 import uvicorn
 
 from . import s1_functions as s1
+from . import s2_functions as s2
 # Inicialitzem l'aplicació FastAPI
 app = FastAPI(title="API de la pràctica 1")
 TEMP_DIR = Path("temp_uploads")
@@ -22,6 +23,32 @@ def read_root():
 
 
 # --- ENDPOINTS FOR S1 FUNCTIONS ---
+@app.post("/translate/rgb_to_yuv/")
+async def rgb_to_yuv_endpoint(
+    r: int = Form(0),
+    g: int = Form(0),
+    b: int = Form(0)
+):
+    try:
+        translator = s1.traslator()
+        y, u, v = translator.rgb_to_yuv(r, g, b)
+        return {"y": y, "u": u, "v": v}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during RGB to YUV conversion: {str(e)}")
+
+@app.post("/translate/yuv_to_rgb/")
+async def yuv_to_rgb_endpoint(
+    y: float = Form(0.0),
+    u: float = Form(0.0),
+    v: float = Form(0.0)
+):
+    try:
+        translator = s1.traslator()
+        r, g, b = translator.yuv_to_rgb(y, u, v)
+        return {"r": r, "g": g, "b": b}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during YUV to RGB conversion: {str(e)}")
+
 @app.post("/process/resize_image/")
 async def resize_image_endpoint(
     width: int = Form(-1),
@@ -63,6 +90,31 @@ async def resize_image_endpoint(
         # if output_path.exists():
         #     os.remove(output_path)
 
+@app.post("/process/serpentine/")
+async def serpentine_endpoint(
+    file: UploadFile = File(...)
+):
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
+
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process image with s1_functions:
+        output_pixels = s1.serpentine(str(input_path))
+
+        #3 Return processed data:
+        return {"serpentine_pixels": output_pixels.tolist()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during serpentine reading: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+
 @app.post("/process/bw_image/")
 async def bw_image_endpoint(
     file: UploadFile = File(...)
@@ -100,3 +152,184 @@ async def bw_image_endpoint(
             os.remove(input_path)
         #if output_path.exists():
             #os.remove(output_path)
+
+@app.post("/process/run_length_encoding/")
+async def run_length_encoding_endpoint(
+    file: UploadFile = File(...)
+):
+    try:
+        #1 Read uploaded file content as bytes
+        file_content = await file.read()
+        byte_stream = list(file_content)
+
+        #2 Process byte stream with s1_functions:
+        encoded_stream = s1.run_length_encoding(byte_stream)
+
+        #3 Return encoded data:
+        return {"run_length_encoded": encoded_stream}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during Run Length Encoding: {str(e)}")
+
+
+# --- ENDPOINTS FOR S2 FUNCTIONS ---
+
+@app.post("/process/change_video_resolution/")
+async def change_video_resolution_endpoint(
+    width: int = Form(-1),
+    height: int = Form(-1),
+    file: UploadFile = File(...)
+):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
+    output_filename = f"resized_{width}x{height}_{file.filename}"
+    output_path = TEMP_DIR / output_filename
+
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process video with s2_functions:
+        s2.change_video_resolutin(str(input_path), str(output_path), width, height)
+
+        #3 Return processed file:
+        return FileResponse(path=output_path, filename=output_filename, media_type='video/mp4')
+
+    
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during video resizing: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+        # if output_path.exists():
+        #     os.remove(output_path)
+
+@app.post("/process/change_chroma_subsampling/")
+async def change_chroma_subsampling_endpoint(
+    subsampling: str = Form("420"),
+    file: UploadFile = File(...)
+):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
+    output_filename = f"subsampled_{subsampling}_{file.filename}"
+    output_path = TEMP_DIR / output_filename
+
+    if subsampling not in ["420p", "422p", "444p", "420p10le", "422p10le", "444p10le"]:
+        raise HTTPException(status_code=400, detail="Invalid subsampling format. Supported formats: 420p, 422p, 444p, 420p10le, 422p10le, 444p10le")
+    
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process video with s2_functions:
+        s2.change_chroma_subsampling(str(input_path), str(output_path), subsampling)
+
+        #3 Return processed file:
+        return FileResponse(path=output_path, filename=output_filename, media_type='video/mp4')
+
+    
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during chroma subsampling change: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+        # if output_path.exists():
+        #     os.remove(output_path)
+
+@app.post("/info/video_info/")
+async def video_info_endpoint(
+    file: UploadFile = File(...)
+):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+
+    try:
+        #1 Save uploaded file
+        TEMP_DIR.mkdir(exist_ok = True)
+        input_path = TEMP_DIR / file.filename
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Get video info with s2_functions:
+        video_info = s2.get_video_info(str(input_path))
+
+        #3 Return video info:
+        return {"video_info": video_info}
+
+    
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during video info retrieval: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+
+@app.post("/process/process_bbb/")
+async def process_bbb_endpoint(
+    file: UploadFile = File(...)
+):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
+    output_filename = f"bbb_20s.mp4"
+    output_path = TEMP_DIR / output_filename
+
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process video with s2_functions:
+        s2.process_bbb(str(input_path), str(output_path))
+
+        #3 Return processed file:
+        return FileResponse(path=output_path, filename=output_filename, media_type='video/mp4')
+
+    
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during BBB video processing: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+        # if output_path.exists():
+        #     os.remove(output_path)
+
+
+
+
