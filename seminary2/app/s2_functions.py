@@ -98,15 +98,16 @@ def count_tracks(video_path):
     }
 
 
-def visualize_motion_vectors(input_video_path, output_video_path):    
-    stream = ffmpeg.input(input_video_path, flags2='+export_mvs')  #export motion vectors information of the video
+def visualize_motion_vectors(input_video_path, output_video_path):   
+    stream = ffmpeg.input(input_video_path, ss=20, to=50, flags2='+export_mvs')  #export motion vectors information of the video
     stream = ffmpeg.output(stream, output_video_path, vf='codecview=mv=pf+bf+bb')  #paint the motion vectors on the video
     ffmpeg.run(stream)
     
     return output_video_path
 
-def show_yuv_histogram(input_video_path, output_image_path):
-    stream = ffmpeg.input(input_video_path)
-    stream = ffmpeg.output(stream, output_image_path, vf='histogram=yuv=1', vframes=1)
-    ffmpeg.run(stream)
-    return output_image_path
+def show_yuv_histogram(input_video_path, output_video_path):
+    stream = ffmpeg.input(input_video_path, ss=20, to=50)
+    #stream = ffmpeg.output(stream, output_video_path, vf='histogram=yuv=1', vframes=1) DOESN'T WORK
+    stream = ffmpeg.output(stream, output_video_path, vf="split=2[a][b],[b]histogram,format=yuva444p[hh],[a][hh]overlay=x=10:y=10,format=yuv420p")
+    ffmpeg.run(stream, overwrite_output=True, capture_stdout=True, capture_stderr=True)
+    return output_video_path

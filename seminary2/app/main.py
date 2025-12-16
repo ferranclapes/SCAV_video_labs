@@ -5,6 +5,7 @@ import shutil
 import os
 from pathlib import Path
 import uvicorn
+import ffmpeg
 
 from . import s1_functions as s1
 from . import s2_functions as s2
@@ -391,7 +392,7 @@ async def show_motion_vectors_endpoint(
             shutil.copyfileobj(file.file, buffer)
         
         #2 Process video with s2_functions:
-        s2.visualize_motion_vectors(input_path, output_path)
+        s2.visualize_motion_vectors(str(input_path), str(output_path))
 
         #3 Return processed file:
         return FileResponse(path=output_path, filename=output_filename, media_type='video/mp4')
@@ -432,12 +433,18 @@ async def show_yuv_histogram_endpoint(
             shutil.copyfileobj(file.file, buffer)
         
         #2 Process video with s2_functions:
-        s2.show_yuv_histogram(input_path, output_path)
+        s2.show_yuv_histogram(str(input_path), str(output_path))
 
         #3 Return processed file:
         return FileResponse(path=output_path, filename=output_filename, media_type='video/mp4')
 
     
+    except ffmpeg.Error as e:
+        # AQUÍ ESTÀ LA MÀGIA: Retornem el missatge d'error real de FFmpeg
+        # Així sabrem si és un problema de format, de filtre, o de què.
+        error_message = e.stderr.decode('utf8')
+        print(f"FFMPEG ERROR: {error_message}") # També ho imprimim al log
+        raise HTTPException(status_code=500, detail=f"FFmpeg failed: {error_message}")
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during motion vectors video processing: {str(e)}")
