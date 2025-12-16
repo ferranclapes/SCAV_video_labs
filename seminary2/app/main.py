@@ -216,7 +216,7 @@ async def change_video_resolution_endpoint(
 
 @app.post("/process/change_chroma_subsampling/")
 async def change_chroma_subsampling_endpoint(
-    subsampling: str = Form("420"),
+    subsampling: str = Form("420p"),
     file: UploadFile = File(...)
 ):
     # Clean the temp directory
@@ -331,5 +331,119 @@ async def process_bbb_endpoint(
         #     os.remove(output_path)
 
 
+@app.post("/info/count_tracks/")
+async def count_tracks_endpoint(
+    file: UploadFile = File(...)
+):
+    
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
 
 
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process video with s2_functions:
+        track_info = s2.count_tracks(str(input_path))
+        
+        #3 Return the value processed:
+        return track_info
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during analyzing video container: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+        # if output_path.exists():
+        #     os.remove(output_path)
+
+
+@app.post("/process/show_motion_vectors/")
+async def show_motion_vectors_endpoint(
+    file: UploadFile = File(...)
+):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
+    output_filename = f"bbb_motion_vectors.mp4"
+    output_path = TEMP_DIR / output_filename
+
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process video with s2_functions:
+        s2.visualize_motion_vectors(input_path, output_path)
+
+        #3 Return processed file:
+        return FileResponse(path=output_path, filename=output_filename, media_type='video/mp4')
+
+    
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during motion vectors video processing: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+        # if output_path.exists():
+        #     os.remove(output_path)
+
+
+
+@app.post("/process/show_yuv_histogram/")
+async def show_yuv_histogram_endpoint(
+    file: UploadFile = File(...)
+):
+    # Clean the temp directory
+    if( TEMP_DIR.exists()):
+        for temp_file in os.listdir(TEMP_DIR):
+            temp_file_path = TEMP_DIR / temp_file
+            if temp_file_path.is_file():
+                os.remove(temp_file_path)
+
+
+    TEMP_DIR.mkdir(exist_ok = True)
+    input_path = TEMP_DIR / file.filename
+    output_filename = f"yuv_histogram.mp4"
+    output_path = TEMP_DIR / output_filename
+
+    try:
+        #1 Save uploaded file
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        #2 Process video with s2_functions:
+        s2.show_yuv_histogram(input_path, output_path)
+
+        #3 Return processed file:
+        return FileResponse(path=output_path, filename=output_filename, media_type='video/mp4')
+
+    
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during motion vectors video processing: {str(e)}")
+    finally:
+        # Clean up temporary files
+        if input_path.exists():
+            os.remove(input_path)
+        # if output_path.exists():
+        #     os.remove(output_path)

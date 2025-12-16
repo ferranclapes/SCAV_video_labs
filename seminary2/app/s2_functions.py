@@ -70,3 +70,43 @@ def process_bbb(input_video_path, output_video_path):
         )
         .run(overwrite_output=True)
     )
+
+
+def count_tracks(video_path):
+    if not video_path.endswith('.mp4'):
+        raise ValueError("The function only supports .mp4 files.")
+
+
+    probe = ffmpeg.probe(video_path)  #probe function as exercice 3
+    multimedia_files = probe.get('streams', [])  #creates an array of all streams in the container
+    
+    total_tracks = len(multimedia_files) #count the total number of tracks
+    
+    #this is complately optional but it looks very visual
+    audio_tracks = len([s for s in multimedia_files if s['codec_type'] == 'audio'])
+    video_tracks = len([s for s in multimedia_files if s['codec_type'] == 'video'])
+    subtitle_tracks = len([s for s in multimedia_files if s['codec_type'] == 'subtitle'])
+    
+    return {
+        "total_tracks": total_tracks,   #THE ONLY IMPORTANT OF THE EXERCICE
+        "breakdown": {
+            "audio": audio_tracks,
+            "video": video_tracks,
+            "subtitle": subtitle_tracks,
+            "other": total_tracks - (audio_tracks + video_tracks + subtitle_tracks)
+        }
+    }
+
+
+def visualize_motion_vectors(input_video_path, output_video_path):    
+    stream = ffmpeg.input(input_video_path, flags2='+export_mvs')  #export motion vectors information of the video
+    stream = ffmpeg.output(stream, output_video_path, vf='codecview=mv=pf+bf+bb')  #paint the motion vectors on the video
+    ffmpeg.run(stream)
+    
+    return output_video_path
+
+def show_yuv_histogram(input_video_path, output_image_path):
+    stream = ffmpeg.input(input_video_path)
+    stream = ffmpeg.output(stream, output_image_path, vf='histogram=yuv=1', vframes=1)
+    ffmpeg.run(stream)
+    return output_image_path
