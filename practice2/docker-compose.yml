@@ -1,0 +1,14 @@
+# done only because earasing the container and image every time 
+# there whas a change in the code was too boring and i found that
+
+version: '3.8'
+
+services:
+  scav-api:
+    build: .
+    container_name: scav-api-container
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
